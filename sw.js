@@ -1,0 +1,1 @@
+console.log('[Service Worker] Hi from Service Worker')
