@@ -1,4 +1,4 @@
-const cacheName = 'app-shell-v2';
+const cacheName = 'app-shell-v1';
 
 const assetsToCache = [
   'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css',
@@ -63,5 +63,5 @@ async function cacheFirst(request) {
 }
 
 self.addEventListener('fetch', event => {
-  event.respondWith(cacheFirst(event.request));
+  event.respondWith(networkFirst(event.request));
 });
