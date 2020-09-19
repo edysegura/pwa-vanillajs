@@ -1,14 +1,31 @@
-const cacheName = 'no-connection-v1';
+const cacheName = 'app-shell-v2';
 
 const assetsToCache = [
+  'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css',
+  'https://fonts.gstatic.com/s/materialicons/v55/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2',
+  'https://fonts.gstatic.com/s/roboto/v20/KFOmCnqEu92Fr1Mu4mxKKTU1Kg.woff2',
   'https://fonts.googleapis.com/css?family=Roboto:400,700',
   'https://fonts.googleapis.com/icon?family=Material+Icons',
-  'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css',
-  'assets/css/style.css',
   'assets/images/pwa-logo.png',
-  'assets/images/offline.jpg',
-  'offline.html'
+  'assets/js/material.min.js',
+  'assets/css/style.css',
+  'assets/js/app.js',
+  'favicon.ico',
+  'index.html',
+  '/'
 ];
+
+function removeOldCache(key) {
+  if (key !== cacheName) {
+    console.log(`[Service Worker] Removing old cache: ${key}`);
+    return caches.delete(key);
+  }
+}
+
+async function cacheCleanup() {
+  const keyList = await caches.keys();
+  return Promise.all(keyList.map(removeOldCache));
+}
 
 async function cacheStaticAssets() {
   const cache = await caches.open(cacheName);
@@ -21,24 +38,30 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// TODO delete old caches
 self.addEventListener('activate', event => {
   console.log('[Service Worker] Activating service worker...', event);
+  event.waitUntil(cacheCleanup());
   self.clients.claim();
 });
 
 async function networkFirst(request) {
   try {
-    const response = await fetch(request);
-    return response;
+    return await fetch(request);
   } catch (error) {
     const cache = await caches.open(cacheName);
-    const url = request.url.endsWith('/') ? 'offline.html' : request.url;
-    return cache.match(url);
+    return cache.match('offline.html');
   }
 }
 
-// TODO add a commit with only a console log
+async function cacheFirst(request) {
+  try {
+    const cache = await caches.open(cacheName);
+    return await cache.match(request);
+  } catch (error) {
+    return await fetch(request);
+  }
+}
+
 self.addEventListener('fetch', event => {
-  event.respondWith(networkFirst(event.request));
+  event.respondWith(cacheFirst(event.request));
 });
