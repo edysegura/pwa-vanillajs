@@ -56,7 +56,8 @@ async function networkFirst(request) {
 async function cacheFirst(request) {
   try {
     const cache = await caches.open(cacheName);
-    return await cache.match(request);
+    const response = await cache.match(request);
+    return response || fetch(request);
   } catch (error) {
     return await fetch(request);
   }
